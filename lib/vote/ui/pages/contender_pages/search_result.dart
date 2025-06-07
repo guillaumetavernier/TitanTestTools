@@ -26,14 +26,13 @@ class SearchResult extends HookConsumerWidget {
               children: u
                   .map(
                     (e) => GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: 20,
-                            ),
+                            Container(width: 20),
                             Expanded(
                               child: Text(
                                 e.getName(),

@@ -5,6 +5,7 @@ import 'package:myecl/paiement/class/qr_code_data.dart';
 import 'package:myecl/paiement/class/store.dart';
 import 'package:myecl/paiement/class/transaction.dart';
 import 'package:myecl/tools/exception.dart';
+import 'package:myecl/tools/functions.dart';
 import 'package:myecl/tools/repository/repository.dart';
 
 class StoresRepository extends Repository {
@@ -20,18 +21,30 @@ class StoresRepository extends Repository {
     return await delete("/$id");
   }
 
-  Future<List<History>> getStoreHistory(String id) async {
+  Future<List<History>> getStoreHistory(
+    String id,
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    final queryParams = {
+      'start_date': processDateToAPIWithoutHour(startDate),
+      'end_date': processDateToAPIWithoutHour(endDate),
+    };
+
+    final queryString = Uri(queryParameters: queryParams).query;
+    final url = "/$id/history?$queryString";
+
     return List<History>.from(
-      (await getList(suffix: "/$id/history")).map((e) => History.fromJson(e)),
+      (await getList(suffix: url)).map((e) => History.fromJson(e)),
     );
   }
 
   Future<Transaction?> scan(String id, QrCodeData data, bool? bypass) async {
     try {
-      var response = await create(
-        {...data.toJson(), "bypass_membership": bypass ?? false},
-        suffix: "/$id/scan",
-      );
+      var response = await create({
+        ...data.toJson(),
+        "bypass_membership": bypass ?? false,
+      }, suffix: "/$id/scan");
       return Transaction.fromJson(response);
     } on AppException catch (e) {
       if (e.type == ErrorType.conflict) {
@@ -42,10 +55,10 @@ class StoresRepository extends Repository {
   }
 
   Future<bool> canScan(String id, QrCodeData data, bool? bypass) async {
-    final response = await create(
-      {...data.toJson(), "bypass_membership": bypass ?? false},
-      suffix: "/$id/scan/check",
-    );
+    final response = await create({
+      ...data.toJson(),
+      "bypass_membership": bypass ?? false,
+    }, suffix: "/$id/scan/check");
     return response["success"] == true;
   }
 }

@@ -18,7 +18,9 @@ import 'package:myecl/tools/ui/builders/async_child.dart';
 import 'package:myecl/tools/ui/widgets/custom_dialog_box.dart';
 
 class ScanPage extends HookConsumerWidget {
-  const ScanPage({super.key});
+  ScanPage({super.key});
+
+  final GlobalKey<ScannerState> scannerKey = GlobalKey<ScannerState>();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,77 +32,91 @@ class ScanPage extends HookConsumerWidget {
     final formatter = NumberFormat("#,##0.00", "fr_FR");
     final transactionNotifier = ref.watch(transactionProvider.notifier);
     final ongoingTransaction = ref.watch(ongoingTransactionProvider);
-    final ongoingTransactionNotifier =
-        ref.watch(ongoingTransactionProvider.notifier);
+    final ongoingTransactionNotifier = ref.watch(
+      ongoingTransactionProvider.notifier,
+    );
 
     void displayToastWithContext(TypeMsg type, String msg) {
       displayToast(context, type, msg);
     }
 
-    final opacity = useAnimationController(
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
+    final opacity = useAnimationController(duration: const Duration(seconds: 1))
+      ..repeat(reverse: true);
     return Stack(
       children: [
-        const Scanner(),
-        if (store.structure.associationMembership.id != '')
-          Positioned(
-            top: 10,
-            left: 20,
-            child: SizedBox(
-              width: MediaQuery.of(context).size.width - 40,
-              child: Row(
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      bypassNotifier.setBypass(!bypass);
-                    },
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: !bypass,
-                          checkColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          side: const BorderSide(
-                            color: Colors.white,
-                            width: 1.5,
-                          ),
-                          activeColor: Colors.white,
-                          onChanged: (value) {
-                            bypassNotifier.setBypass(!bypass);
-                          },
+        Scanner(key: scannerKey),
+        store.structure.associationMembership.id != ''
+            ? Positioned(
+                top: 10,
+                left: 20,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width - 40,
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () {
+                          bypassNotifier.setBypass(!bypass);
+                        },
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: !bypass,
+                              checkColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              side: const BorderSide(
+                                color: Colors.white,
+                                width: 1.5,
+                              ),
+                              activeColor: Colors.white,
+                              onChanged: (value) {
+                                bypassNotifier.setBypass(!bypass);
+                              },
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              bypass
+                                  ? "Pas d'adhésion obligatoire"
+                                  : "Limité à ${store.structure.associationMembership.name}",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 5),
-                        Text(
-                          bypass
-                              ? "Pas d'adhésion obligatoire"
-                              : "Limité à ${store.structure.associationMembership.name}",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                          ),
+                      ),
+                      Spacer(),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: const HeroIcon(
+                          HeroIcons.xMark,
+                          size: 20,
+                          color: Colors.white,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                  Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: const HeroIcon(
-                      HeroIcons.xMark,
-                      size: 20,
-                      color: Colors.white,
-                    ),
+                ),
+              )
+            : Positioned(
+                top: 20,
+                right: 20,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: const HeroIcon(
+                    HeroIcons.xMark,
+                    size: 20,
+                    color: Colors.white,
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
         Column(
           children: [
             Expanded(
@@ -117,23 +133,39 @@ class ScanPage extends HookConsumerWidget {
                                 horizontal: 50,
                               ),
                               decoration: BoxDecoration(
-                                color:
-                                    Colors.grey.shade200.withValues(alpha: 0.8),
+                                color: ongoingTransaction.when(
+                                  data: (_) =>
+                                      Colors.green.withValues(alpha: 0.8),
+                                  loading: () => Colors.grey.shade200
+                                      .withValues(alpha: 0.8),
+                                  error: (error, stack) =>
+                                      Colors.red.withValues(alpha: 0.8),
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Column(
                                 children: [
-                                  const Text(
+                                  Text(
                                     "Montant",
                                     style: TextStyle(
                                       fontSize: 13,
+                                      color: ongoingTransaction.when(
+                                        data: (_) => Colors.white,
+                                        loading: () => Colors.black,
+                                        error: (error, stack) => Colors.white,
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     '${formatter.format(barcode.tot / 100)} €',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18,
+                                      fontSize: 25,
+                                      color: ongoingTransaction.when(
+                                        data: (_) => Colors.white,
+                                        loading: () => Colors.black,
+                                        error: (error, stack) => Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -167,9 +199,7 @@ class ScanPage extends HookConsumerWidget {
               ),
             ),
             // Qr code scanning zone
-            SizedBox(
-              height: MediaQuery.of(context).size.width * 0.8,
-            ),
+            SizedBox(height: MediaQuery.of(context).size.width * 0.8),
             Expanded(
               child: Column(
                 children: [
@@ -189,33 +219,6 @@ class ScanPage extends HookConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 30),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: GestureDetector(
-                              child: Container(
-                                width: double.infinity,
-                                height: 50,
-                                alignment: Alignment.center,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(10),
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                ),
-                                child: const Text(
-                                  'Suivant',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
-                                ),
-                              ),
-                              onTap: () {
-                                barcodeNotifier.clearBarcode();
-                                ongoingTransactionNotifier
-                                    .clearOngoingTransaction();
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 20),
                           CancelButton(
                             onCancel: (bool isInTime) async {
                               if (isInTime) {
@@ -231,8 +234,8 @@ class ScanPage extends HookConsumerWidget {
                                           final value =
                                               await transactionNotifier
                                                   .cancelTransaction(
-                                            transaction.id,
-                                          );
+                                                    transaction.id,
+                                                  );
                                           value.when(
                                             data: (value) {
                                               if (value) {
@@ -265,12 +268,41 @@ class ScanPage extends HookConsumerWidget {
                                             loading: () {},
                                           );
                                         });
+                                        scannerKey.currentState?.resetScanner();
                                       },
                                     );
                                   },
                                 );
                               }
                             },
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: GestureDetector(
+                              child: Container(
+                                width: double.infinity,
+                                height: 50,
+                                alignment: Alignment.center,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                                child: const Text(
+                                  'Suivant',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                              ),
+                              onTap: () {
+                                scannerKey.currentState?.resetScanner();
+                                barcodeNotifier.clearBarcode();
+                                ongoingTransactionNotifier
+                                    .clearOngoingTransaction();
+                              },
+                            ),
                           ),
                         ],
                       ),

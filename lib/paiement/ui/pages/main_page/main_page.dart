@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:myecl/paiement/providers/has_accepted_tos_provider.dart';
 import 'package:myecl/paiement/providers/my_wallet_provider.dart';
 import 'package:myecl/paiement/providers/tos_provider.dart';
 import 'package:myecl/paiement/providers/is_payment_admin.dart';
@@ -32,8 +33,10 @@ class PaymentMainPage extends HookConsumerWidget {
     }
 
     final shouldDisplayTosDialog = ref.watch(shouldDisplayTosDialogProvider);
-    final shouldDisplayTosDialogNotifier =
-        ref.read(shouldDisplayTosDialogProvider.notifier);
+    final shouldDisplayTosDialogNotifier = ref.read(
+      shouldDisplayTosDialogProvider.notifier,
+    );
+    final hasAcceptedToSNotifier = ref.read(hasAcceptedTosProvider.notifier);
     final tos = ref.watch(tosProvider);
     final tosNotifier = ref.read(tosProvider.notifier);
     final registerNotifier = ref.read(registerProvider.notifier);
@@ -68,6 +71,8 @@ class PaymentMainPage extends HookConsumerWidget {
       flipped.value = !flipped.value;
       if (flipped.value) {
         controller.reverse();
+        ref.invalidate(myWalletProvider);
+        ref.invalidate(myHistoryProvider);
       } else {
         controller.forward();
       }
@@ -90,33 +95,34 @@ class PaymentMainPage extends HookConsumerWidget {
 
     return PaymentTemplate(
       child: shouldDisplayTosDialog
-          ? TOSDialogBox(
-              descriptions: tos.maybeWhen(
-                orElse: () => '',
-                data: (tos) => tos.tosContent,
+          ? SingleChildScrollView(
+              child: TOSDialogBox(
+                descriptions: tos.maybeWhen(
+                  orElse: () => '',
+                  data: (tos) => tos.tosContent,
+                ),
+                title: "Nouvelles Conditions Générales d'Utilisation",
+                onYes: () {
+                  tos.maybeWhen(
+                    orElse: () {},
+                    data: (tos) async {
+                      final value = await tosNotifier.signTOS(
+                        tos.copyWith(acceptedTosVersion: tos.latestTosVersion),
+                      );
+                      if (value) {
+                        await mySellersNotifier.getMyStores();
+                        await myHistoryNotifier.getHistory();
+                        await myWalletNotifier.getMyWallet();
+                        shouldDisplayTosDialogNotifier.update(false);
+                        hasAcceptedToSNotifier.update(true);
+                      }
+                    },
+                  );
+                },
+                onNo: () {
+                  shouldDisplayTosDialogNotifier.update(false);
+                },
               ),
-              title: "Nouvelle TOS",
-              onYes: () {
-                tos.maybeWhen(
-                  orElse: () {},
-                  data: (tos) async {
-                    final value = await tosNotifier.signTOS(
-                      tos.copyWith(
-                        acceptedTosVersion: tos.latestTosVersion,
-                      ),
-                    );
-                    if (value) {
-                      await mySellersNotifier.getMyStores();
-                      await myHistoryNotifier.getHistory();
-                      await myWalletNotifier.getMyWallet();
-                      shouldDisplayTosDialogNotifier.update(false);
-                    }
-                  },
-                );
-              },
-              onNo: () {
-                shouldDisplayTosDialogNotifier.update(false);
-              },
             )
           : LayoutBuilder(
               builder: (context, constraints) {
@@ -128,9 +134,7 @@ class PaymentMainPage extends HookConsumerWidget {
                   },
                   child: Column(
                     children: [
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
                       AsyncChild(
                         value: mySellers,
                         builder: (context, mySellers) {
@@ -148,9 +152,7 @@ class PaymentMainPage extends HookConsumerWidget {
                             height: 250,
                             width: MediaQuery.of(context).size.width,
                             child: FlipCard(
-                              back: StoreCard(
-                                toggle: toggle,
-                              ),
+                              back: StoreCard(toggle: toggle),
                               front: AccountCard(
                                 toggle: toggle,
                                 resetHandledKeys: resetHandledKeys,

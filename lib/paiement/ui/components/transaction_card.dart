@@ -38,18 +38,9 @@ class TransactionCard extends StatelessWidget {
         break;
     }
 
-    Color getTransactionStatusColor(TransactionStatus status) {
-      switch (status) {
-        case TransactionStatus.confirmed:
-          return const Color.fromARGB(255, 21, 215, 105);
-        case TransactionStatus.refunded:
-          return const Color.fromARGB(255, 97, 25, 204);
-        case TransactionStatus.pending:
-          return const Color.fromARGB(255, 204, 138, 25);
-        default:
-          return const Color.fromARGB(255, 204, 70, 25);
-      }
-    }
+    final transactionName = transaction.type != HistoryType.transfer
+        ? transaction.otherWalletName
+        : "Recharge";
 
     return GestureDetector(
       onTap: onTap,
@@ -62,19 +53,14 @@ class TransactionCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 27,
-              backgroundColor: (transaction.type == HistoryType.given ||
+              backgroundColor:
+                  (transaction.type == HistoryType.given ||
                       transaction.type == HistoryType.refundDebited)
                   ? const Color(0xfffe807f)
                   : const Color(0xff017f80),
-              child: HeroIcon(
-                icon,
-                color: Colors.white,
-                size: 25,
-              ),
+              child: HeroIcon(icon, color: Colors.white, size: 25),
             ),
-            const SizedBox(
-              width: 15,
-            ),
+            const SizedBox(width: 15),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -85,8 +71,8 @@ class TransactionCard extends StatelessWidget {
                       Expanded(
                         child: AutoSizeText(
                           storeView
-                              ? transaction.otherWalletName
-                              : "${transaction.type == HistoryType.refundCredited || transaction.type == HistoryType.refundDebited ? "Remboursement - " : ""}${transaction.otherWalletName}",
+                              ? transactionName
+                              : "${transaction.type == HistoryType.refundCredited || transaction.type == HistoryType.refundDebited ? "Remboursement - " : ""}$transactionName",
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -96,65 +82,64 @@ class TransactionCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: getTransactionStatusColor(transaction.status)
-                              .withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          transaction.status == TransactionStatus.confirmed
-                              ? "Confirmé"
-                              : transaction.status == TransactionStatus.refunded
-                                  ? "Remboursé"
-                                  : transaction.status ==
-                                          TransactionStatus.pending
-                                      ? "En attente"
-                                      : "Annulé",
-                          style: TextStyle(
-                            color:
-                                getTransactionStatusColor(transaction.status),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                      const SizedBox(width: 10),
+                      if (transaction.status == TransactionStatus.canceled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(
+                              255,
+                              204,
+                              70,
+                              25,
+                            ).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            "Annulé",
+                            style: TextStyle(
+                              color: const Color.fromARGB(255, 204, 70, 25),
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 5,
-                  ),
+                  const SizedBox(height: 5),
                   Text(
-                    "Le ${DateFormat("dd MMM yyyy à HH:mm").format(transaction.creation)}",
+                    "Le ${DateFormat("EEE dd MMMM yyyy à HH:mm", "fr_FR").format(transaction.creation)}",
                     style: const TextStyle(
                       color: Color(0xff204550),
                       fontSize: 12,
                     ),
                   ),
+                  if (transaction.refund != null)
+                    Text(
+                      "Remboursé le ${DateFormat("EEE dd MMMM yyyy à HH:mm", "fr_FR").format(transaction.refund!.creation)} de ${formatter.format(transaction.refund!.total / 100)} €",
+                      style: const TextStyle(
+                        color: Color.fromARGB(255, 16, 46, 55),
+                        fontSize: 9,
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(
-              width: 10,
-            ),
+            const SizedBox(width: 10),
             Text(
-              "${transaction.type == HistoryType.given ? " -" : " +"} ${formatter.format(transaction.total / 100)} €",
+              "${transaction.type == HistoryType.given || transaction.type == HistoryType.refundDebited ? " -" : " +"} ${formatter.format(transaction.total / 100)} €",
               style: TextStyle(
                 color: const Color(0xff204550),
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 decoration:
                     (transaction.status == TransactionStatus.confirmed ||
-                            transaction.status == TransactionStatus.refunded)
-                        ? TextDecoration.none
-                        : TextDecoration.lineThrough,
+                        transaction.status == TransactionStatus.refunded)
+                    ? TextDecoration.none
+                    : TextDecoration.lineThrough,
                 decorationColor: const Color(0xff204550).withValues(alpha: 0.8),
                 decorationThickness: 2.85,
               ),

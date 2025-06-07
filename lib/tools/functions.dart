@@ -345,7 +345,7 @@ Future<DateTime?> _getDate(
   );
 }
 
-getOnlyDayDate(
+Future getOnlyDayDate(
   BuildContext context,
   TextEditingController dateController, {
   DateTime? initialDate,
@@ -353,14 +353,20 @@ getOnlyDayDate(
   DateTime? lastDate,
 }) async {
   final DateTime now = DateTime.now();
-  final DateTime? date =
-      await _getDate(context, now, initialDate, firstDate, lastDate);
+  final DateTime? date = await _getDate(
+    context,
+    now,
+    initialDate,
+    firstDate,
+    lastDate,
+  );
 
-  dateController.text =
-      DateFormat('dd/MM/yyyy').format(date ?? initialDate ?? now);
+  dateController.text = DateFormat(
+    'dd/MM/yyyy',
+  ).format(date ?? initialDate ?? now);
 }
 
-getOnlyDayDateFunction(
+Future getOnlyDayDateFunction(
   BuildContext context,
   void Function(String) setDate, {
   DateTime? initialDate,
@@ -368,24 +374,30 @@ getOnlyDayDateFunction(
   DateTime? lastDate,
 }) async {
   final DateTime now = DateTime.now();
-  final DateTime? date =
-      await _getDate(context, now, initialDate, firstDate, lastDate);
+  final DateTime? date = await _getDate(
+    context,
+    now,
+    initialDate,
+    firstDate,
+    lastDate,
+  );
 
   setDate(DateFormat('dd/MM/yyyy').format(date ?? initialDate ?? now));
 }
 
-getOnlyHourDate(
+Future getOnlyHourDate(
   BuildContext context,
   TextEditingController dateController,
 ) async {
   final DateTime now = DateTime.now();
   final TimeOfDay? time = await _getTime(context);
 
-  dateController.text =
-      DateFormat('HH:mm').format(DateTimeField.combine(now, time));
+  dateController.text = DateFormat(
+    'HH:mm',
+  ).format(DateTimeField.combine(now, time));
 }
 
-getFullDate(
+Future getFullDate(
   BuildContext context,
   TextEditingController dateController, {
   DateTime? initialDate,
@@ -393,29 +405,27 @@ getFullDate(
   DateTime? lastDate,
 }) async {
   final DateTime now = DateTime.now();
-  _getDate(context, now, initialDate, firstDate, lastDate).then(
-    (DateTime? date) {
-      if (date != null && context.mounted) {
-        _getTime(context).then(
-          (TimeOfDay? time) {
-            if (time != null) {
-              dateController.text = DateFormat('dd/MM/yyyy HH:mm')
-                  .format(DateTimeField.combine(date, time));
-            }
-          },
-        );
-      } else {
-        dateController.text =
-            DateFormat('dd/MM/yyyy HH:mm').format(initialDate ?? now);
-      }
-    },
-  );
+  _getDate(context, now, initialDate, firstDate, lastDate).then((
+    DateTime? date,
+  ) {
+    if (date != null && context.mounted) {
+      _getTime(context).then((TimeOfDay? time) {
+        if (time != null) {
+          dateController.text = DateFormat(
+            'dd/MM/yyyy HH:mm',
+          ).format(DateTimeField.combine(date, time));
+        }
+      });
+    } else {
+      dateController.text = DateFormat(
+        'dd/MM/yyyy HH:mm',
+      ).format(initialDate ?? now);
+    }
+  });
 }
 
 int generateIntFromString(String s) {
-  return s.codeUnits.reduce(
-    (value, element) => value + 100 * element,
-  );
+  return s.codeUnits.reduce((value, element) => value + 100 * element);
 }
 
 bool isEmailInValid(String email) {
@@ -435,7 +445,7 @@ bool isNotStaff(String email) {
 
 String getAppFlavor() {
   if (appFlavor != null) {
-    return appFlavor!;
+    return appFlavor!.toLowerCase();
   }
 
   if (const String.fromEnvironment("flavor") != "") {
@@ -470,19 +480,64 @@ String getTitanHost() {
   return host;
 }
 
-String getTitanPackageName() {
+String getTitanURL() {
   switch (getAppFlavor()) {
     case "dev":
-      return "fr.myecl.titan.dev";
+      return "http://localhost:3000";
     case "alpha":
-      return "fr.myecl.titan.alpha";
+      return "https://titan.dev.eclair.ec-lyon.fr";
     case "prod":
-      return "fr.myecl.titan";
+      return "https://myecl.fr";
     default:
       throw StateError("Invalid app flavor");
   }
 }
 
+String getTitanURLScheme() {
+  switch (getAppFlavor()) {
+    case "dev":
+      return "titan.dev";
+    case "alpha":
+      return "titan.alpha";
+    case "prod":
+      return "titan";
+    default:
+      throw StateError("Invalid app flavor");
+  }
+}
+
+String getTitanPackageName() {
+  return "fr.myecl.${getTitanURLScheme()}";
+}
+
 String getTitanLogo() {
   return "assets/images/logo_${getAppFlavor()}.png";
+}
+
+/// Replaces path parameters in the given path with the provided IDs.
+///
+/// This function replaces each segment in the path that starts with a colon (`:`)
+/// with the corresponding value from the `ids` list. The number of IDs must match
+/// the number of parameters in the path.
+///
+/// - Replacements are applied in the order of appearance.
+///
+/// Examples:
+/// - Path: `/advert/:advertId`, IDs: `["123"]` → `/advert/123`
+/// - Path: `/advert/:advertId/:posterId`, IDs: `["123", "456"]` → `/advert/123/456`
+/// - Path: `""` → `""`
+String buildPath(String path, List<String>? ids) {
+  if (path.isEmpty || ids == null || ids.isEmpty) {
+    return path;
+  }
+  int i = 0;
+  return path
+      .split("/")
+      .map((segment) {
+        if (segment.startsWith(":") && ids.isNotEmpty) {
+          return ids[i++];
+        }
+        return segment;
+      })
+      .join("/");
 }

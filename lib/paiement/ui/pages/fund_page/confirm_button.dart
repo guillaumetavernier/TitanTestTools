@@ -32,10 +32,13 @@ class ConfirmFundButton extends ConsumerWidget {
       data: (wallet) => wallet.balance / 100,
     );
 
-    final redirectUrl = "titan.alpha://payment";
+    final redirectUrl = kIsWeb
+        ? "${getTitanURL()}/static.html" // ?
+        : "${getTitanURLScheme()}://payment";
     final amountToAdd = double.tryParse(fundAmount.replaceAll(",", ".")) ?? 0;
 
-    final minValidFundAmount = fundAmount.isNotEmpty &&
+    final minValidFundAmount =
+        fundAmount.isNotEmpty &&
         double.parse(fundAmount.replaceAll(',', '.')) >= 1;
     final maxValidFundAmount = amountToAdd + currentAmount <= maxBalanceAmount;
 
@@ -53,11 +56,13 @@ class ConfirmFundButton extends ConsumerWidget {
     }
 
     void helloAssoCallback(String fundingUrl) async {
-      html.WindowBase? popupWin = html.window.open(
-        fundingUrl,
-        "HelloAsso",
-        "width=800, height=900, scrollbars=yes",
-      ) as html.WindowBase?;
+      html.WindowBase? popupWin =
+          html.window.open(
+                fundingUrl,
+                "HelloAsso",
+                "width=800, height=900, scrollbars=yes",
+              )
+              as html.WindowBase?;
 
       if (popupWin == null) {
         displayToastWithContext(TypeMsg.error, "Veuillez autoriser les popups");
@@ -69,10 +74,7 @@ class ConfirmFundButton extends ConsumerWidget {
         if (popupWin.closed == true) {
           completer.complete();
         } else {
-          Future.delayed(
-            const Duration(milliseconds: 100),
-            checkWindowClosed,
-          );
+          Future.delayed(const Duration(milliseconds: 100), checkWindowClosed);
         }
       }
 
@@ -83,12 +85,7 @@ class ConfirmFundButton extends ConsumerWidget {
         final receivedUri = Uri.parse(data);
         final code = receivedUri.queryParameters["code"];
         popupWin.close();
-        if (code == "succeeded") {
-          displayToastWithContext(TypeMsg.msg, "Paiement effectué avec succès");
-          ref.watch(myWalletProvider.notifier).getMyWallet();
-        } else {
-          displayToastWithContext(TypeMsg.error, "Paiement annulé");
-        }
+        Navigator.pop(context, code);
       }
 
       html.window.onMessage.listen((event) {
@@ -102,7 +99,9 @@ class ConfirmFundButton extends ConsumerWidget {
       onTap: () async {
         if (!minValidFundAmount) {
           displayToastWithContext(
-              TypeMsg.error, "Veuillez entrer un montant supérieur à 1€");
+            TypeMsg.error,
+            "Veuillez entrer un montant supérieur à 1€",
+          );
           return;
         }
         if (!maxValidFundAmount) {
@@ -115,8 +114,8 @@ class ConfirmFundButton extends ConsumerWidget {
 
         final value = await fundingUrlNotifier.getFundingUrl(
           InitInfo(
-            amount:
-                (double.parse(fundAmount.replaceAll(',', '.')) * 100).toInt(),
+            amount: (double.parse(fundAmount.replaceAll(',', '.')) * 100)
+                .round(),
             redirectUrl: redirectUrl,
           ),
         );
@@ -133,9 +132,6 @@ class ConfirmFundButton extends ConsumerWidget {
             displayToastWithContext(TypeMsg.error, error.toString());
           },
         );
-        if (context.mounted) {
-          Navigator.pop(context);
-        }
       },
       waitingColor: const Color(0xff2e2f5e),
       builder: (Widget child) => Container(

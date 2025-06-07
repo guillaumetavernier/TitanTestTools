@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:myecl/paiement/class/history.dart';
 import 'package:myecl/paiement/class/refund.dart';
 import 'package:myecl/paiement/providers/refund_amount_provider.dart';
+import 'package:myecl/paiement/providers/selected_store_history.dart';
 import 'package:myecl/paiement/providers/transaction_provider.dart';
 import 'package:myecl/paiement/ui/components/digit_fade_in_animation.dart';
 import 'package:myecl/paiement/ui/components/keyboard.dart';
@@ -22,8 +23,8 @@ class ReFundPage extends ConsumerWidget {
     final transactionNotifier = ref.watch(transactionProvider.notifier);
     final formatter = NumberFormat("#,##0.00", "fr_FR");
 
-    final isValid = double.tryParse(refundAmount.replaceAll(",", ".")) !=
-            null &&
+    final isValid =
+        double.tryParse(refundAmount.replaceAll(",", ".")) != null &&
         double.parse(refundAmount.replaceAll(",", ".")) <= history.total / 100;
 
     void displayToastWithContext(TypeMsg type, String msg) {
@@ -38,19 +39,14 @@ class ReFundPage extends ConsumerWidget {
       child: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xff017f80),
-              Color.fromARGB(255, 9, 103, 103),
-            ],
+            colors: [Color(0xff017f80), Color.fromARGB(255, 9, 103, 103)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: Column(
           children: [
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Text(
               'Remboursement',
               style: const TextStyle(
@@ -59,15 +55,10 @@ class ReFundPage extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(
-              height: 5,
-            ),
+            const SizedBox(height: 5),
             Text(
               '${history.otherWalletName} (max: ${formatter.format(history.total / 100)} €)',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             ),
             Expanded(
               child: Center(
@@ -109,14 +100,16 @@ class ReFundPage extends ConsumerWidget {
                   if (refundAmount.contains(",") &&
                       refundAmount.substring(refundAmount.indexOf(",")).length <
                           3) {
-                    refundAmountNotifier
-                        .setRefundAmount(refundAmount + e.toString());
+                    refundAmountNotifier.setRefundAmount(
+                      refundAmount + e.toString(),
+                    );
                   } else if (!refundAmount.contains(",")) {
                     if (e == "," && refundAmount.isEmpty) {
                       refundAmountNotifier.setRefundAmount("0,");
                     } else {
-                      refundAmountNotifier
-                          .setRefundAmount(refundAmount + e.toString());
+                      refundAmountNotifier.setRefundAmount(
+                        refundAmount + e.toString(),
+                      );
                     }
                   }
                 }
@@ -141,9 +134,8 @@ class ReFundPage extends ConsumerWidget {
                         history.id,
                         Refund(
                           completeRefund: false,
-                          amount: (double.parse(
-                                    refundAmount.replaceAll(",", "."),
-                                  ) *
+                          amount:
+                              (double.parse(refundAmount.replaceAll(",", ".")) *
                                   100) ~/
                               1,
                         ),
@@ -154,6 +146,7 @@ class ReFundPage extends ConsumerWidget {
                             TypeMsg.msg,
                             "Transaction effectuée",
                           );
+                          ref.invalidate(sellerHistoryProvider);
                           Navigator.of(context).pop();
                         },
                         loading: () {},
@@ -167,10 +160,7 @@ class ReFundPage extends ConsumerWidget {
                     },
                     waitingColor: Colors.black,
                     builder: (child) => AddEditButtonLayout(
-                      colors: [
-                        Colors.grey.shade100,
-                        Colors.grey.shade200,
-                      ],
+                      colors: [Colors.grey.shade100, Colors.grey.shade200],
                       child: child,
                     ),
                     child: Text(

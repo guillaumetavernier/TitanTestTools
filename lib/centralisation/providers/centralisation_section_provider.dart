@@ -13,7 +13,7 @@ class SectionNotifier extends ListNotifier<Section> {
   late List<Module> allModules = [];
   late List<Module> modulesLiked = [];
 
-  initState() async {
+  Future initState() async {
     allSections = await sectionRepository.getSectionList();
     allModules = allSections.expand((element) => element.moduleList).toList();
     state = AsyncValue.data(allSections);
@@ -22,9 +22,9 @@ class SectionNotifier extends ListNotifier<Section> {
 
 final sectionProvider =
     StateNotifierProvider<SectionNotifier, AsyncValue<List<Section>>>((ref) {
-  SectionNotifier notifier = SectionNotifier();
-  tokenExpireWrapperAuth(ref, () async {
-    await notifier.initState();
-  });
-  return notifier;
-});
+      SectionNotifier notifier = SectionNotifier();
+      tokenExpireWrapperAuth(ref, () async {
+        await notifier.initState();
+      });
+      return notifier;
+    });

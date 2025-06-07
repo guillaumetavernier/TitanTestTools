@@ -13,8 +13,9 @@ void main() {
 
   setUp(() {
     mockEventRepository = MockEventRepository();
-    confirmedEventListProvider =
-        ConfirmedEventListProvider(eventRepository: mockEventRepository);
+    confirmedEventListProvider = ConfirmedEventListProvider(
+      eventRepository: mockEventRepository,
+    );
   });
 
   group('ConfirmedEventListProvider', () {
@@ -23,8 +24,9 @@ void main() {
     final event3 = Event.empty().copyWith(id: '3', name: 'Event 3');
 
     test('loadConfirmedEvent returns AsyncValue with list of events', () async {
-      when(() => mockEventRepository.getConfirmedEventList())
-          .thenAnswer((_) async => [event1, event2, event3]);
+      when(
+        () => mockEventRepository.getConfirmedEventList(),
+      ).thenAnswer((_) async => [event1, event2, event3]);
 
       final result = await confirmedEventListProvider.loadConfirmedEvent();
 
@@ -32,7 +34,7 @@ void main() {
         result.when(
           data: (data) => data,
           loading: () => [],
-          error: (_, __) => [],
+          error: (_, _) => [],
         ),
         [event1, event2, event3],
       );
@@ -49,15 +51,18 @@ void main() {
         confirmedEventListProvider.state.when(
           data: (data) => data,
           loading: () => [],
-          error: (_, __) => [],
+          error: (_, _) => [],
         ),
         [event1, event2, newEvent],
       );
     });
 
     test('deleteEvent removes event from list', () async {
-      confirmedEventListProvider.state =
-          AsyncValue.data([event1, event2, event3]);
+      confirmedEventListProvider.state = AsyncValue.data([
+        event1,
+        event2,
+        event3,
+      ]);
 
       final result = await confirmedEventListProvider.deleteEvent(event2);
 
@@ -66,7 +71,7 @@ void main() {
         confirmedEventListProvider.state.when(
           data: (data) => data,
           loading: () => [],
-          error: (_, __) => [],
+          error: (_, _) => [],
         ),
         [event1, event3],
       );

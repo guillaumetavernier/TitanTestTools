@@ -15,8 +15,9 @@ void main() {
 
     setUp(() {
       userListRepository = MockUserListRepository();
-      userListNotifier =
-          UserListNotifier(userListRepository: userListRepository);
+      userListNotifier = UserListNotifier(
+        userListRepository: userListRepository,
+      );
     });
 
     test('initial state is loading', () {
@@ -51,7 +52,7 @@ void main() {
         result.when(
           data: (data) => data,
           loading: () => [],
-          error: (_, __) => [],
+          error: (_, _) => [],
         ),
         users,
       );

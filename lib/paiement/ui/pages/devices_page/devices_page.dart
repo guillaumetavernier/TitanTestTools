@@ -7,6 +7,7 @@ import 'package:myecl/paiement/class/create_device.dart';
 import 'package:myecl/paiement/class/wallet_device.dart';
 import 'package:myecl/paiement/providers/device_list_provider.dart';
 import 'package:myecl/paiement/providers/device_provider.dart';
+import 'package:myecl/paiement/providers/has_accepted_tos_provider.dart';
 import 'package:myecl/paiement/providers/key_service_provider.dart';
 import 'package:myecl/paiement/tools/functions.dart';
 import 'package:myecl/paiement/tools/platform_info.dart';
@@ -31,6 +32,7 @@ class DevicesPage extends HookConsumerWidget {
     final keyService = ref.watch(keyServiceProvider);
     final deviceKey = keyService.getKeyId();
     final displayAddDevice = useState(true);
+    final hasAcceptedToS = ref.watch(hasAcceptedTosProvider);
 
     void displayToastWithContext(TypeMsg type, String msg) {
       displayToast(context, type, msg);
@@ -51,20 +53,20 @@ class DevicesPage extends HookConsumerWidget {
                   ..sort((a, b) {
                     if (a.id == snapshot.data) return -1;
                     if (b.id == snapshot.data) return 1;
-                    return statusOrder(a.status)
-                        .compareTo(statusOrder(b.status));
+                    return statusOrder(
+                      a.status,
+                    ).compareTo(statusOrder(b.status));
                   });
 
                 final firstDevice =
                     devices.map((e) => e.id).contains(snapshot.data)
-                        ? devices
-                            .where(
-                              (element) => element.id == snapshot.data,
-                            )
-                            .first
-                        : null;
+                    ? devices
+                          .where((element) => element.id == snapshot.data)
+                          .first
+                    : null;
 
-                final shouldDisplayAddDevice = (snapshot.data == null ||
+                final shouldDisplayAddDevice =
+                    (snapshot.data == null ||
                         firstDevice == null ||
                         firstDevice.status == WalletDeviceStatus.revoked) &&
                     displayAddDevice.value;
@@ -80,6 +82,13 @@ class DevicesPage extends HookConsumerWidget {
                     if (shouldDisplayAddDevice)
                       AddDeviceButton(
                         onTap: () async {
+                          if (!hasAcceptedToS) {
+                            displayToastWithContext(
+                              TypeMsg.error,
+                              "Veuillez accepter les Conditions Générales d'Utilisation.",
+                            );
+                            return;
+                          }
                           final name = await getPlatformInfo();
                           final keyPair = await keyService.generateKeyPair();
                           final publicKey =
@@ -89,27 +98,31 @@ class DevicesPage extends HookConsumerWidget {
                             name: name,
                             ed25519PublicKey: base64PublicKey,
                           );
-                          final value =
-                              await deviceNotifier.registerDevice(body);
+                          final value = await deviceNotifier.registerDevice(
+                            body,
+                          );
                           if (value != null) {
                             await keyService.saveKeyPair(keyPair);
                             await keyService.saveKeyId(value);
                             await devicesNotifier.getDeviceList();
                             displayAddDevice.value = false;
-                            await showDialog(
-                              context: context,
-                              builder: (context) {
-                                return DeviceDialogBox(
-                                  title: 'Demande d\'activation de l\'appareil',
-                                  descriptions:
-                                      "La demande d'activation est prise en compte, veuilliez consulter votre boite mail pour finaliser la démarche",
-                                  buttonText: "Ok",
-                                  onClick: () {
-                                    Navigator.of(context).pop();
-                                  },
-                                );
-                              },
-                            );
+                            if (context.mounted) {
+                              await showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return DeviceDialogBox(
+                                    title:
+                                        'Demande d\'activation de l\'appareil',
+                                    descriptions:
+                                        "La demande d'activation est prise en compte, veuilliez consulter votre boite mail pour finaliser la démarche",
+                                    buttonText: "Ok",
+                                    onClick: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  );
+                                },
+                              );
+                            }
                           }
                         },
                       ),
@@ -118,6 +131,13 @@ class DevicesPage extends HookConsumerWidget {
                         device: device,
                         isActual: device.id == snapshot.data,
                         onRevoke: () async {
+                          if (!hasAcceptedToS) {
+                            displayToastWithContext(
+                              TypeMsg.error,
+                              "Veuillez accepter les Conditions Générales d'Utilisation.",
+                            );
+                            return;
+                          }
                           await showDialog(
                             context: context,
                             builder: (context) {
@@ -127,23 +147,27 @@ class DevicesPage extends HookConsumerWidget {
                                     "Vous ne pourrez plus utiliser cet appareil pour les paiements",
                                 onYes: () async {
                                   tokenExpireWrapper(ref, () async {
-                                    final value =
-                                        await devicesNotifier.revokeDevice(
-                                      device.copyWith(
-                                        status: WalletDeviceStatus.revoked,
-                                      ),
-                                    );
+                                    final value = await devicesNotifier
+                                        .revokeDevice(
+                                          device.copyWith(
+                                            status: WalletDeviceStatus.revoked,
+                                          ),
+                                        );
                                     if (value) {
                                       displayToastWithContext(
-                                          TypeMsg.msg, "Appareil révoqué");
-                                      final savedId =
-                                          await keyService.getKeyId();
+                                        TypeMsg.msg,
+                                        "Appareil révoqué",
+                                      );
+                                      final savedId = await keyService
+                                          .getKeyId();
                                       if (savedId == device.id) {
                                         await keyService.clear();
                                       }
                                     } else {
-                                      displayToastWithContext(TypeMsg.error,
-                                          "Erreur lors de la révocation de l'appareil");
+                                      displayToastWithContext(
+                                        TypeMsg.error,
+                                        "Erreur lors de la révocation de l'appareil",
+                                      );
                                     }
                                   });
                                 },

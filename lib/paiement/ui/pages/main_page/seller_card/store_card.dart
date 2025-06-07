@@ -4,7 +4,6 @@ import 'package:heroicons/heroicons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:myecl/paiement/providers/barcode_provider.dart';
 import 'package:myecl/paiement/providers/ongoing_transaction.dart';
-import 'package:myecl/paiement/providers/selected_month_provider.dart';
 import 'package:myecl/paiement/providers/selected_store_provider.dart';
 import 'package:myecl/paiement/router.dart';
 import 'package:myecl/paiement/ui/pages/main_page/main_card_button.dart';
@@ -19,10 +18,10 @@ class StoreCard extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final store = ref.watch(selectedStoreProvider);
-    final ongoingTransactionNotifier =
-        ref.read(ongoingTransactionProvider.notifier);
+    final ongoingTransactionNotifier = ref.read(
+      ongoingTransactionProvider.notifier,
+    );
     final barcodeNotifier = ref.read(barcodeProvider.notifier);
-    final selectedMonthNotifier = ref.watch(selectedMonthProvider.notifier);
     final buttonGradient = [
       const Color.fromARGB(255, 6, 75, 75),
       const Color.fromARGB(255, 0, 29, 29),
@@ -48,7 +47,7 @@ class StoreCard extends HookConsumerWidget {
                 backgroundColor: Colors.transparent,
                 scrollControlDisabledMaxHeightRatio:
                     (1 - 80 / MediaQuery.of(context).size.height),
-                builder: (context) => const ScanPage(),
+                builder: (context) => ScanPage(),
               ).then((_) {
                 ongoingTransactionNotifier.clearOngoingTransaction();
                 barcodeNotifier.clearBarcode();
@@ -70,7 +69,6 @@ class StoreCard extends HookConsumerWidget {
             colors: buttonGradient,
             icon: HeroIcons.wallet,
             onPressed: () async {
-              selectedMonthNotifier.clearSelectedMonth();
               QR.to(PaymentRouter.root + PaymentRouter.storeStats);
             },
             title: 'Historique',
@@ -82,10 +80,7 @@ class StoreCard extends HookConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 50,
-          ),
+          style: const TextStyle(color: Colors.white, fontSize: 50),
         ),
       ),
     );
