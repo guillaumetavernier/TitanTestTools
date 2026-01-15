@@ -4,9 +4,13 @@ class EventTextConstants {
   static const String addedEvent = "Événement ajouté";
   static const String addingError = "Erreur lors de l'ajout";
   static const String allDay = "Toute la journée";
+  static const String confirm = "Confirmer";
+  static const String confirmEvent = "Confirmer l'événement ?";
   static const String confirmation = "Confirmation";
   static const String confirmed = "Confirmé";
   static const String dates = "Dates";
+  static const String decline = "Refuser";
+  static const String declineEvent = "Refuser l'événement ?";
   static const String declined = "Refusé";
   static const String delete = "Supprimer";
   static const String deletedEvent = "Événement supprimé";
@@ -72,4 +76,9 @@ class EventTextConstants {
     'Samedi',
     'Dimanche',
   ];
+}
+
+class EventPermissionConstants {
+  static const String accessEvents = 'access_calendar';
+  static const String manageEvents = 'manage_events';
 }

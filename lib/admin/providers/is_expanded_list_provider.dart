@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myecl/admin/class/module_visibility.dart';
-import 'package:myecl/admin/providers/module_visibility_list_provider.dart';
+import 'package:titan/admin/providers/permission_name_list_provider.dart';
 
 class IsExpandedListProvider extends StateNotifier<List<bool>> {
-  IsExpandedListProvider(List<ModuleVisibility> modules)
-      : super(List.generate(modules.length, (index) => false));
+  IsExpandedListProvider(List<String> permissionsNames)
+    : super(List.generate(permissionsNames.length, (index) => false));
 
   void toggle(int i) {
     var copy = state.toList();
@@ -15,11 +14,11 @@ class IsExpandedListProvider extends StateNotifier<List<bool>> {
 
 final isExpandedListProvider =
     StateNotifierProvider<IsExpandedListProvider, List<bool>>((ref) {
-  final modules = ref.read(moduleVisibilityListProvider);
-  return modules.maybeWhen(
-    data: (data) => IsExpandedListProvider(data),
-    orElse: () {
-      return IsExpandedListProvider([]);
-    },
-  );
-});
+      final modules = ref.read(permissionsNamesListProvider);
+      return modules.maybeWhen(
+        data: (data) => IsExpandedListProvider(data),
+        orElse: () {
+          return IsExpandedListProvider([]);
+        },
+      );
+    });

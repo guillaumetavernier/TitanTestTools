@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:myecl/amap/class/delivery.dart';
-import 'package:myecl/amap/providers/delivery_provider.dart';
-import 'package:myecl/amap/tools/constants.dart';
-import 'package:myecl/tools/functions.dart';
+import 'package:titan/amap/class/delivery.dart';
+import 'package:titan/amap/providers/delivery_provider.dart';
+import 'package:titan/amap/tools/constants.dart';
+import 'package:titan/tools/functions.dart';
 
 class DeliveryUi extends HookConsumerWidget {
   final Delivery delivery;
@@ -25,7 +25,7 @@ class DeliveryUi extends HookConsumerWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8),
-        height: 50,
+        height: 70,
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
@@ -54,15 +54,38 @@ class DeliveryUi extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(width: 10),
-              Text(
-                '${AMAPTextConstants.the} ${processDate(delivery.deliveryDate)}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: (selected && showSelected)
-                      ? Colors.white
-                      : AMAPColorConstants.textDark,
-                ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width - 200,
+                    ),
+                    child: Text(
+                      delivery.name,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: (selected && showSelected)
+                            ? Colors.white
+                            : AMAPColorConstants.textDark,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${AMAPTextConstants.the} ${processDate(delivery.deliveryDate)}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: (selected && showSelected)
+                          ? Colors.white
+                          : AMAPColorConstants.textDark,
+                    ),
+                  ),
+                ],
               ),
               const Spacer(),
               Text(

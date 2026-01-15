@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:myecl/amap/class/order.dart';
-import 'package:myecl/amap/providers/user_amount_provider.dart';
-import 'package:myecl/amap/providers/user_order_list_provider.dart';
-import 'package:myecl/amap/providers/order_provider.dart';
-import 'package:myecl/amap/tools/constants.dart';
-import 'package:myecl/amap/tools/functions.dart';
-import 'package:myecl/tools/ui/layouts/card_button.dart';
-import 'package:myecl/tools/ui/layouts/card_layout.dart';
-import 'package:myecl/tools/ui/widgets/custom_dialog_box.dart';
-import 'package:myecl/tools/functions.dart';
-import 'package:myecl/tools/token_expire_wrapper.dart';
-import 'package:myecl/tools/ui/builders/waiting_button.dart';
+import 'package:titan/amap/class/order.dart';
+import 'package:titan/amap/providers/user_amount_provider.dart';
+import 'package:titan/amap/providers/user_order_list_provider.dart';
+import 'package:titan/amap/providers/order_provider.dart';
+import 'package:titan/amap/tools/constants.dart';
+import 'package:titan/amap/tools/functions.dart';
+import 'package:titan/tools/ui/layouts/card_button.dart';
+import 'package:titan/tools/ui/layouts/card_layout.dart';
+import 'package:titan/tools/ui/widgets/custom_dialog_box.dart';
+import 'package:titan/tools/functions.dart';
+import 'package:titan/tools/token_expire_wrapper.dart';
+import 'package:titan/tools/ui/builders/waiting_button.dart';
 
 class OrderUI extends HookConsumerWidget {
   final Order order;
@@ -36,10 +36,25 @@ class OrderUI extends HookConsumerWidget {
       displayToast(context, type, msg);
     }
 
+    final style = TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: AMAPColorConstants.textDark,
+    );
+
+    final tp = TextPainter(
+      text: TextSpan(text: order.deliveryName, style: style),
+      textDirection: TextDirection.ltr,
+      maxLines: isDetail ? 3 : 2,
+    );
+    final maxTextWidth = isDetail ? 180.0 : 150.0;
+    tp.layout(maxWidth: maxTextWidth);
+    final lines = tp.computeLineMetrics().length;
+
     return CardLayout(
       id: order.id,
-      width: 195,
-      height: isDetail ? 100 : 150,
+      width: 214,
+      height: isDetail ? 104 + 26.0 * lines : 144 + 26.0 * lines,
       colors: const [
         AMAPColorConstants.lightGradient1,
         AMAPColorConstants.greenGradient1,
@@ -52,14 +67,33 @@ class OrderUI extends HookConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${AMAPTextConstants.the} ${processDate(order.deliveryDate)}',
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AMAPColorConstants.textDark,
-                ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxTextWidth),
+                    child: Text(
+                      order.deliveryName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AMAPColorConstants.textDark,
+                      ),
+                      maxLines: isDetail ? 3 : 2,
+                    ),
+                  ),
+                  Text(
+                    '${AMAPTextConstants.the} ${processDate(order.deliveryDate)}',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AMAPColorConstants.textDark,
+                    ),
+                  ),
+                ],
               ),
+
               if (!isDetail)
                 GestureDetector(
                   onTap: () {
@@ -87,7 +121,7 @@ class OrderUI extends HookConsumerWidget {
               ),
               const Spacer(),
               Text(
-                "${order.amount.toStringAsFixed(2)}€",
+                "${(order.amount / 100).toStringAsFixed(2)}€",
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
@@ -132,30 +166,29 @@ class OrderUI extends HookConsumerWidget {
                           await showDialog(
                             context: context,
                             builder: ((context) => CustomDialogBox(
-                                  title: AMAPTextConstants.delete,
-                                  descriptions: AMAPTextConstants.deletingOrder,
-                                  onYes: () async {
-                                    await tokenExpireWrapper(ref, () async {
-                                      orderListNotifier
-                                          .deleteOrder(order)
-                                          .then((value) {
-                                        if (value) {
-                                          balanceNotifier
-                                              .updateCash(order.amount);
-                                          displayToastWithContext(
-                                            TypeMsg.msg,
-                                            AMAPTextConstants.deletedOrder,
-                                          );
-                                        } else {
-                                          displayToastWithContext(
-                                            TypeMsg.error,
-                                            AMAPTextConstants.deletingError,
-                                          );
-                                        }
-                                      });
-                                    });
-                                  },
-                                )),
+                              title: AMAPTextConstants.delete,
+                              descriptions: AMAPTextConstants.deletingOrder,
+                              onYes: () async {
+                                await tokenExpireWrapper(ref, () async {
+                                  orderListNotifier.deleteOrder(order).then((
+                                    value,
+                                  ) {
+                                    if (value) {
+                                      balanceNotifier.updateCash(order.amount);
+                                      displayToastWithContext(
+                                        TypeMsg.msg,
+                                        AMAPTextConstants.deletedOrder,
+                                      );
+                                    } else {
+                                      displayToastWithContext(
+                                        TypeMsg.error,
+                                        AMAPTextConstants.deletingError,
+                                      );
+                                    }
+                                  });
+                                });
+                              },
+                            )),
                           );
                         },
                         builder: (child) => CardButton(

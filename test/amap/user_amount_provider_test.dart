@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:myecl/amap/providers/user_amount_provider.dart';
-import 'package:myecl/user/class/simple_users.dart';
-import 'package:myecl/amap/class/cash.dart';
-import 'package:myecl/amap/repositories/amap_user_repository.dart';
+import 'package:titan/amap/providers/user_amount_provider.dart';
+import 'package:titan/user/class/simple_users.dart';
+import 'package:titan/amap/class/cash.dart';
+import 'package:titan/amap/repositories/amap_user_repository.dart';
 
 class MockAmapUserRepository extends Mock implements AmapUserRepository {}
 
@@ -20,9 +20,14 @@ void main() {
   group('loadCashByUser', () {
     test('returns cash for valid user id', () async {
       final user = SimpleUser.empty().copyWith(id: '123');
-      final cash = Cash(balance: 100.0, user: user);
-      when(() => mockRepository.getCashByUser('123'))
-          .thenAnswer((_) async => cash);
+      final cash = Cash(
+        balance: 100,
+        user: user,
+        lastOrderDate: DateTime(2025),
+      );
+      when(
+        () => mockRepository.getCashByUser('123'),
+      ).thenAnswer((_) async => cash);
 
       final result = await notifier.loadCashByUser(user.id);
 
@@ -50,10 +55,14 @@ void main() {
 
   group('updateCash', () {
     test('updates cash balance', () async {
-      final cash = Cash(balance: 100.0, user: SimpleUser.empty());
+      final cash = Cash(
+        balance: 100,
+        user: SimpleUser.empty(),
+        lastOrderDate: DateTime(2025),
+      );
       notifier.state = AsyncValue.data(cash);
 
-      await notifier.updateCash(50.0);
+      await notifier.updateCash(50);
 
       expect(
         notifier.state.when(
@@ -61,14 +70,14 @@ void main() {
           loading: () => 0.0,
           error: (error, stackTrace) => 0.0,
         ),
-        equals(150.0),
+        equals(150),
       );
     });
 
     test('returns error when loading', () async {
       notifier.state = const AsyncValue.loading();
 
-      await notifier.updateCash(50.0);
+      await notifier.updateCash(50);
 
       expect(
         notifier.state,
@@ -83,7 +92,7 @@ void main() {
       const error = 'User not found';
       notifier.state = const AsyncValue.error(error, StackTrace.empty);
 
-      await notifier.updateCash(50.0);
+      await notifier.updateCash(50);
 
       expect(notifier.state.error, equals(error));
     });

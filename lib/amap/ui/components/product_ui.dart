@@ -1,11 +1,11 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:heroicons/heroicons.dart';
-import 'package:myecl/amap/class/product.dart';
-import 'package:myecl/amap/tools/constants.dart';
-import 'package:myecl/tools/ui/layouts/card_button.dart';
-import 'package:myecl/tools/ui/layouts/card_layout.dart';
-import 'package:myecl/tools/ui/builders/waiting_button.dart';
+import 'package:titan/amap/class/product.dart';
+import 'package:titan/amap/tools/constants.dart';
+import 'package:titan/tools/ui/layouts/card_button.dart';
+import 'package:titan/tools/ui/layouts/card_layout.dart';
+import 'package:titan/tools/ui/builders/waiting_button.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -59,7 +59,7 @@ class ProductCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           AutoSizeText(
-            '${product.price.toStringAsFixed(2)} €',
+            '${(product.price / 100).toStringAsFixed(2)} €',
             maxLines: 1,
             minFontSize: 10,
             overflow: TextOverflow.ellipsis,
@@ -93,8 +93,10 @@ class ProductCard extends StatelessWidget {
                         ],
                         child: child,
                       ),
-                      child:
-                          const HeroIcon(HeroIcons.trash, color: Colors.white),
+                      child: const HeroIcon(
+                        HeroIcons.trash,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 )

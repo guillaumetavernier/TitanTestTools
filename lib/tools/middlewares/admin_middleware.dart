@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:myecl/router.dart';
+import 'package:titan/router.dart';
 import 'package:qlevar_router/qlevar_router.dart';
 
 class AdminMiddleware extends QMiddleware {
-  final StateProvider<bool> isAdminProvider;
+  final ProviderBase<bool> isAdminProvider;
   final Ref ref;
 
   AdminMiddleware(this.ref, this.isAdminProvider);

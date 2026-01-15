@@ -8,7 +8,7 @@ class Product {
   });
   late final String id;
   late final String name;
-  late final double price;
+  late final int price;
   late final int quantity;
   late final String category;
 
@@ -31,17 +31,16 @@ class Product {
   Product copyWith({
     String? id,
     String? name,
-    double? price,
+    int? price,
     int? quantity,
     String? category,
-  }) =>
-      Product(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        price: price ?? this.price,
-        quantity: quantity ?? this.quantity,
-        category: category ?? this.category,
-      );
+  }) => Product(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    price: price ?? this.price,
+    quantity: quantity ?? this.quantity,
+    category: category ?? this.category,
+  );
 
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};
@@ -54,13 +53,7 @@ class Product {
   }
 
   static Product empty() {
-    return Product(
-      id: "",
-      name: "",
-      price: 0,
-      quantity: 0,
-      category: "",
-    );
+    return Product(id: "", name: "", price: 0, quantity: 0, category: "");
   }
 
   @override

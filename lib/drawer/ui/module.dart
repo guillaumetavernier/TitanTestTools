@@ -1,12 +1,13 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:myecl/drawer/class/module.dart';
-import 'package:myecl/drawer/providers/animation_provider.dart';
-import 'package:myecl/drawer/providers/swipe_provider.dart';
-import 'package:myecl/drawer/tools/constants.dart';
-import 'package:myecl/home/providers/scrolled_provider.dart';
-import 'package:myecl/home/router.dart';
-import 'package:myecl/tools/providers/path_forwarding_provider.dart';
+import 'package:titan/drawer/class/module.dart';
+import 'package:titan/drawer/providers/animation_provider.dart';
+import 'package:titan/drawer/providers/swipe_provider.dart';
+import 'package:titan/drawer/tools/constants.dart';
+import 'package:titan/home/providers/scrolled_provider.dart';
+import 'package:titan/home/router.dart';
+import 'package:titan/tools/providers/path_forwarding_provider.dart';
 import 'package:qlevar_router/qlevar_router.dart';
 
 class ModuleUI extends HookConsumerWidget {
@@ -32,9 +33,7 @@ class ModuleUI extends HookConsumerWidget {
           children: [
             Row(
               children: [
-                Container(
-                  width: 25,
-                ),
+                Container(width: 16),
                 Center(
                   child: module.getIcon(
                     module.root == pathForwarding.path
@@ -42,14 +41,16 @@ class ModuleUI extends HookConsumerWidget {
                         : DrawerColorConstants.lightText,
                   ),
                 ),
-                Container(
-                  width: 20,
-                ),
+                Container(width: 16),
                 SizedBox(
                   height: 50,
-                  child: Center(
-                    child: Text(
+                  width: 130,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: AutoSizeText(
                       module.name,
+                      maxLines: 1,
+                      textAlign: TextAlign.start,
                       style: TextStyle(
                         color: module.root == pathForwarding.path
                             ? DrawerColorConstants.selectedText
@@ -68,8 +69,9 @@ class ModuleUI extends HookConsumerWidget {
         QR.to(module.root);
         pathForwardingNotifier.forward(module.root);
         if (animation != null) {
-          final controllerNotifier =
-              ref.watch(swipeControllerProvider(animation).notifier);
+          final controllerNotifier = ref.watch(
+            swipeControllerProvider(animation).notifier,
+          );
           controllerNotifier.toggle();
         }
         if (pathForwarding.path != HomeRouter.root) {

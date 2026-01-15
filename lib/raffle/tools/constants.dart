@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:myecl/tools/constants.dart';
+import 'package:titan/tools/constants.dart';
 
 class RaffleColorConstants extends ColorConstants {
   static const Color darkText = Color.fromARGB(255, 50, 9, 1);
@@ -120,4 +120,10 @@ class RaffleTextConstants {
   static const String edit = "Modifier";
 
   static const String addPackTicket = "Ajouter un pack de ticket";
+}
+
+class RafflePermissionConstants {
+  static const String accessRaffle = "access_raffle";
+  static const String manageRaffle = "manage_raffle";
+  static const String manageCash = "manage_cash";
 }
